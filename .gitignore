@@ -1,0 +1,5 @@
+.import/
+*.translation
+build/
+export/
+.mono/

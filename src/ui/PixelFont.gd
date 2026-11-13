@@ -1,0 +1,57 @@
+extends Reference
+# Tiny 3x5 bitmap font drawn with rectangles, so text stays pixel-crisp at any
+# window size. Each glyph is 15 bits, read left-to-right, top-to-bottom.
+
+const ADVANCE := 4
+const LINE := 7
+
+const GLYPHS := {
+	"A": "010101111101101", "B": "110101110101110", "C": "011100100100011", "D": "110101101101110",
+	"E": "111100110100111", "F": "111100110100100", "G": "011100101101011", "H": "101101111101101",
+	"I": "111010010010111", "J": "001001001101010", "K": "101101110101101", "L": "100100100100111",
+	"M": "101111101101101", "N": "110101101101101", "O": "010101101101010", "P": "110101110100100",
+	"Q": "010101101110011", "R": "110101110101101", "S": "011100010001110", "T": "111010010010010",
+	"U": "101101101101111", "V": "101101101101010", "W": "101101101111101", "X": "101101010101101",
+	"Y": "101101010010010", "Z": "111001010100111",
+	"0": "111101101101111", "1": "010110010010111", "2": "110001010100111", "3": "110001010001110",
+	"4": "101101111001001", "5": "111100110001110", "6": "011100111101111", "7": "111001010010010",
+	"8": "111101111101111", "9": "111101111001110",
+	" ": "000000000000000", ".": "000000000000010", ",": "000000000010100", "!": "010010010000010",
+	"?": "110001010000010", "-": "000000111000000", ":": "000010000010000", "/": "001001010100100",
+	">": "100010001010100", "<": "001010100010001", "'": "010010000000000", "(": "010100100100010",
+	")": "010001001001010", "+": "000010111010000", "=": "000111000111000", "%": "101001010100101",
+	"&": "010101010101011", "*": "101010101000000",
+}
+
+
+static func draw_text(ci: CanvasItem, pos: Vector2, text: String, color: Color, scale := 1, shadow := true) -> void:
+	if shadow:
+		_draw_run(ci, pos + Vector2(scale, scale), text, Color(0, 0, 0, color.a * 0.75), scale)
+	_draw_run(ci, pos, text, color, scale)
+
+
+static func draw_centered(ci: CanvasItem, center_x: float, y: float, text: String, color: Color, scale := 1, shadow := true) -> void:
+	draw_text(ci, Vector2(round(center_x - width(text, scale) / 2.0), y), text, color, scale, shadow)
+
+
+static func width(text: String, scale := 1) -> int:
+	var widest := 0
+	for line in text.split("\n"):
+		widest = int(max(widest, line.length() * ADVANCE - 1))
+	return widest * scale
+
+
+static func _draw_run(ci: CanvasItem, pos: Vector2, text: String, color: Color, scale: int) -> void:
+	var x := 0
+	var y := 0
+	for ch in text.to_upper():
+		if ch == "\n":
+			x = 0
+			y += LINE
+			continue
+		var glyph = GLYPHS.get(ch)
+		if glyph != null:
+			for i in range(15):
+				if glyph[i] == "1":
+					ci.draw_rect(Rect2(pos.x + (x + i % 3) * scale, pos.y + (y + i / 3) * scale, scale, scale), color)
+		x += ADVANCE
